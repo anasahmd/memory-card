@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
+import StartMenu from './components/StartMenu';
+import Game from './components/Game';
 
 const App = () => {
-	const [characters, setCharacters] = useState('');
-	const [selected, setSelected] = useState([]);
+	const [characters, setCharacters] = useState([]);
+	const [selectedCards, setSelectedCards] = useState([]);
 	const [bestScore, setBestScore] = useState(0);
+	const [gameStatus, setGameStatus] = useState(1);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -11,21 +14,48 @@ const App = () => {
 				'https://api.jikan.moe/v4/anime/16498/characters'
 			);
 			response = await response.json();
-			setCharacters(response.data.splice(0, 10));
+
+			//Formatting data from api
+			let characters = response.data.map(({ character }) => {
+				return {
+					id: character.mal_id,
+					image: character.images.webp.image_url,
+					name: character.name,
+				};
+			});
+
+			//Initializing characters
+			initializeCharacters(10, characters);
 		};
 		fetchData();
 	}, []);
 
-	const handleClick = (id) => {
-		if (!selected.includes(id)) {
-			setSelected([...selected, id]);
+	const handleCardClick = (id) => {
+		if (!selectedCards.includes(id)) {
+			setSelectedCards([...selectedCards, id]);
 		} else {
-			if (bestScore < selected.length) {
-				setBestScore(selected.length);
+			if (bestScore < selectedCards.length) {
+				setBestScore(selectedCards.length);
 			}
-			setSelected([]);
+			setSelectedCards([]);
 		}
 		shuffleCharacters();
+	};
+
+	const initializeCharacters = (num, data) => {
+		const random = new Set();
+		const randomCharacters = [];
+		while (random.size < num) {
+			//Remove narrator character
+			let generatedRandom = Math.floor(Math.random() * data.length);
+			if (generatedRandom !== 47) {
+				random.add(generatedRandom);
+			}
+		}
+		random.forEach((index) => {
+			randomCharacters.push(data[index]);
+		});
+		setCharacters(randomCharacters);
 	};
 
 	const shuffleCharacters = () => {
@@ -41,29 +71,32 @@ const App = () => {
 	};
 
 	return (
-		<div>
-			<div>Score: {selected.length}</div>
-			<div>Best Score: {bestScore}</div>
-			<div className="flex">
-				{characters &&
-					characters.map(({ character }) => (
-						<div
-							className="cursor-pointer"
-							key={character.mal_id}
-							onClick={() => {
-								handleClick(character.mal_id);
-							}}
-						>
-							<img src={character.images.webp.image_url} alt="" />
-							<div>
-								{character.name.split(',').length > 1
-									? `${character.name.split(',')[1]} ${
-											character.name.split(',')[0]
-									  }`
-									: character.name}
-							</div>
-						</div>
-					))}
+		<div
+			className=" text-white min-h-screen"
+			style={{
+				backgroundImage: 'url(/background.jpg)',
+				backgroundPosition: 'center',
+				backgroundSize: 'cover',
+				backgroundRepeat: 'no-repeat',
+				backgroundAttachment: 'fixed',
+			}}
+		>
+			<div className="text-white">
+				<h1 className="text-3xl font-semibold text-center pt-10">
+					Memory Game
+				</h1>
+				{gameStatus === 0 ? (
+					<StartMenu />
+				) : gameStatus === 1 ? (
+					<Game
+						score={selectedCards.length}
+						bestScore={bestScore}
+						characters={characters}
+						handleCardClick={handleCardClick}
+					/>
+				) : (
+					''
+				)}
 			</div>
 		</div>
 	);
