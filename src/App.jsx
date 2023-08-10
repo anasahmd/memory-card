@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import StartMenu from './components/StartMenu';
 import Game from './components/Game';
+import background from './assets/background.jpg';
 
 const App = () => {
 	const [characters, setCharacters] = useState([]);
@@ -74,7 +75,7 @@ const App = () => {
 		<div
 			className=" text-white min-h-screen"
 			style={{
-				backgroundImage: 'url(/background.jpg)',
+				backgroundImage: `url(${background})`,
 				backgroundPosition: 'center',
 				backgroundSize: 'cover',
 				backgroundRepeat: 'no-repeat',
